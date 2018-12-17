@@ -58,41 +58,31 @@ def citation(br):
 # read JSON data
 with open('data.json', encoding='utf8') as f:
     fullData = json.load(f)
-# clean it up
-data = []
+# clean it up and save in a dict by its id
+data = {}
 for br in fullData:
-    data.append(cleanup(br))
+    id = br["_id"]
+    data[id] = cleanup(br)
 
+# some statistic
 print("There are currently", len(data), "entries in this data dump.")
 types = {}
-for i in range(len(data)):
+for i in data:
     if data[i]["type"] in types:
         types[data[i]["type"]] += 1
     else:
         types[data[i]["type"]] = 1
 print("Type statistics", types)
 
-print("Show one entry:", json.dumps(data[0], indent=4))
-
-for k in range(10):
-    print("Show one entry:", json.dumps(data[k], indent=4))
-    print("Short format of this entry:\n   ", citation(data[k]))
-#
-# for k in range(3000):
-#     autString = authors(cleanedData[k])
-#     if autString != "":
-#         print(autString)
-
-mappingIdentifiers = {}
-for i in range(len(data)):
-    id = data[i]["_id"]
-    mappingIdentifiers[id] = i
-
-print("Show one entry by id:", json.dumps(data[mappingIdentifiers["5b4386c13f6d9d57f6aec70a"]], indent=4))#5bab9d7fc3bd212c2435638d
+# show single entry by id
+print("Show one entry by id:",
+      json.dumps(data["5a5e0aaf26f6bc19fe209546"], indent=4))
+print("Show one entry by id:",
+      json.dumps(data["5bab9d86c3bd212c24356625"], indent=4))  # 5bab9d7fc3bd212c2435638d
 
 # look for duplicate ids
 seen = {}
-for i in range(len(data)):
+for i in data:
     for field in data[i]:
         if field.endswith("_identifiers"):
             for id in data[i][field]:
@@ -107,27 +97,25 @@ for i in range(len(data)):
                 else:
                     print("Error with identifiers in", i, id)
 
-
 # add reverse property children from partOf relation
-for i in range(len(data)):
-    id = data[i]["_id"]
+for i in data:
     if "partOf" in data[i] and data[i]["partOf"] != "":
-        if data[i]["partOf"] in mappingIdentifiers:
-            parentElement = data[mappingIdentifiers[data[i]["partOf"]]]
+        if data[i]["partOf"] in data:
+            parentElement = data[data[i]["partOf"]]
             if "children" in parentElement:
-                parentElement["children"].append(id)
+                parentElement["children"].append(i)
             else:
-                parentElement["children"] = [id]
+                parentElement["children"] = [i]
         else:
-            print("WARNING: Key", data[i]["partOf"], "not found but given as partOf in", id)
+            print("WARNING: Key", data[i]["partOf"], "not found but given as partOf in", i)
 
 # list all resources with its children or as standalone
-data.sort(key=lambda br: title(br).lower())
-for i in range(len(data)):
-    if "children" in data[i]:
-        print("\n+ " + citation(data[i]))
-        for child in data[i]["children"]:
-            print("|_", citation(data[mappingIdentifiers[child]]))
+dataList = sorted(data.items(), key=lambda kv: title(kv[1]).lower())
+for key, element in dataList:
+    if "children" in element:
+        print("\n+ " + citation(element))
+        for child in element["children"]:
+            print("|_", citation(data[child]))
     else:
-        if "partOf" not in data[i]:
-            print("\n- " + citation(data[i]))
+        if "partOf" not in element:
+            print("\n- " + citation(element))
