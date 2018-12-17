@@ -68,17 +68,20 @@ for br in fullData:
 print("There are currently", len(data), "entries in this data dump.")
 types = {}
 for i in data:
-    if data[i]["type"] in types:
-        types[data[i]["type"]] += 1
+    if "type" in data[i]:
+        if data[i]["type"] in types:
+            types[data[i]["type"]] += 1
+        else:
+            types[data[i]["type"]] = 1
     else:
-        types[data[i]["type"]] = 1
+        print("\033[91mWARNING:\033[0m No type given for", i)
 print("Type statistics", types)
 
 # show single entry by id
 print("Show one entry by id:",
-      json.dumps(data["5a5e0aaf26f6bc19fe209546"], indent=4))
+      json.dumps(data["5c17665613b8bb034c4e7239"], indent=4))
 print("Show one entry by id:",
-      json.dumps(data["5bab9d86c3bd212c24356625"], indent=4))  # 5bab9d7fc3bd212c2435638d
+      json.dumps(data["5bab9d86c3bd212c24356625"], indent=4))
 
 # look for duplicate ids
 seen = {}
