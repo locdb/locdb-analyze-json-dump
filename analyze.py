@@ -26,6 +26,16 @@ def date(br):
     return "s.d."
 
 
+def type(br):
+    for field in br:
+        if field == "type":
+            # Only output
+            words = br[field].split("_")
+            starts = [c[0] for c in words]
+            return "[" + ''.join(starts) + "]"
+    return "[]"
+
+
 def authors(br):
     for field in br:
         if field.endswith("_contributors") and br[field] != []:
@@ -41,7 +51,7 @@ def authors(br):
 
 
 def citation(br):
-    output = "" + title(br) + " (" + date(br) + ")" + "   " + br["_id"]
+    output = "" + type(br) + " " + title(br) + " (" + date(br) + ")" + "   " + br["_id"]
     return output
 
 
@@ -87,6 +97,8 @@ for i in range(len(data)):
         if field.endswith("_identifiers"):
             for id in data[i][field]:
                 if "scheme" in id and "literalValue" in id:
+                    if id["scheme"] == "ISSN" or id["scheme"] == "ZDB_ID" or id["scheme"] == "ISBN":
+                        break
                     key = id["scheme"] + ":" + id["literalValue"]
                     if key in seen:
                         print("Duplicate found", key, "is in", seen[key], "and", data[i]["_id"])
